@@ -1,3 +1,89 @@
+/**
+ * Modal-Box für die Benachrichtigung
+ */
+class ModalDialog {
+  constructor() {
+    this.notification = null;
+    this.overlay = null;
+    this.text = null;
+    this.button = null;
+
+    this.notificationTimeout = null;
+    this.action = null;
+
+    this.setupHtml();
+    this.setupEventListeners();
+  }
+
+  showAlert(message, performAfterHiding) {
+    // Nachricht und Aktion werden gesetzt
+    this.text.textContent = message;
+    this.action = performAfterHiding;
+
+    // Anzeigen der Modal-Box
+    this.notification.style.display = "block";
+    this.overlay.style.display = "block";
+
+    // Neues Timeout starten
+    this.notificationTimeout = setTimeout(() => this.hideNotification(), 5000);
+  }
+
+  hideNotification() {
+    // Modal-Box wird ausgeblendet
+    this.notification.style.display = "none";
+    this.overlay.style.display = "none";
+
+    // perform action after hiding of notification
+    if (this.action) {
+      this.action();
+    } else {
+      console.log("Warning: As action is undefined, nothing is performed.");
+    }
+
+    // Timeout zurücksetzen
+    clearTimeout(this.notificationTimeout);
+  }
+
+  setupHtml() {
+    const root = document.getElementById("root");
+    const overlay = document.getElementById("overlay");
+    const notification = document.getElementById("notification");
+    const text = document.getElementById("message");
+    const button = document.getElementById("confirm");
+
+    this.overlay =
+      overlay ?? Helper.appendChild(root, "div", "overlay", "overlay");
+    this.notification =
+      notification ?? Helper.appendChild(root, "div", "notification", "modal");
+    this.text = text ?? Helper.appendChild(this.notification, "p", "message");
+    this.button = button ?? Helper.appendChild(this.notification, "button", "confirm", null, "OK");
+  }
+
+  setupEventListeners() {
+    this.button.addEventListener("click", this.hideNotification.bind(this));
+  }
+}
+
+class Helper {
+  static appendChild(
+    parent,
+    elementType,
+    elementId = null,
+    elementClass = null,
+    text = null
+  ) {
+    const child = document.createElement(elementType);
+    if (elementId) child.id = elementId;
+    if (elementClass) child.classList.add(elementClass);
+    if (text) child.textContent = text;
+    parent.appendChild(child);
+    return child;
+  }
+}
+
+/**
+ * Kachel mit '.', 'X' oder 'O'
+ */
 class Tile {
   constructor(element) {
     this.element = element;
@@ -30,81 +116,121 @@ class Tile {
   isValid(player) {
     return player === "X" || player === "O";
   }
+
+  toString() {
+    return `text: ${this.text}, isEmpty: ${this.isEmpty}`;
+  }
 }
 
-class Game {
-  constructor() {
-    this.click = new Audio("resources/click.mp3");
-    this.clack = new Audio("resources/clack.mp3");
-    this.wrong = new Audio("resources/buzz.mp3");
-    this.bell = new Audio("resources/success.mp3");
-    this.draw = new Audio("resources/draw.mp3");
+/**
+ * Spielfeld mit Spielstand
+ */
+class Board {
+  constructor(ressources, dialog, logic) {
+    this.ressources = ressources;
+    this.dialog = dialog;
+    this.logic = logic;
 
-    this.setupGameBoard();
+    this.currentPlayer = null;
+
+    this.setupHtml();
     this.setupEventListeners();
     this.reset();
   }
 
-  setupGameBoard() {
-    const gameContainer = document.querySelector(".game-container");
-    gameContainer.classList.add("game-container");
+  setupHtml() {
+    const root = document.getElementById("root");
+    const container =
+      document.getElementById("board") ??
+      Helper.appendChild(root, "div", "board", "game-container");
 
     for (let i = 1; i <= 9; i++) {
-      const tile = document.createElement("div");
-      tile.classList.add("tile");
-      gameContainer.appendChild(tile);
+      const element = document.createElement("div");
+      element.classList.add("tile");
+      container.appendChild(element);
     }
   }
 
   setupEventListeners() {
-    const gameContainer = document.querySelector(".game-container");
-    gameContainer.addEventListener("click", this.handleTileClick.bind(this));
+    const container = document.querySelector(".game-container");
+    container.addEventListener("click", this.handleTileClick.bind(this));
   }
 
   reset() {
-    this.allTiles().forEach((tile) => tile.reset());
+    const tiles = this.allTiles;
+    tiles.forEach((tile) => tile.reset());
     this.currentPlayer = "X";
-    console.log(this.asText());
+    console.log(this.asText);
   }
 
-  playClickOrClack() {
-    if (this.currentPlayer === "X") {
-      this.click.play();
+  handleTileClick(event) {
+    const clickedTile = event.target;
+    if (!clickedTile.classList.contains("tile")) {
+      return;
+    }
+
+    const tileObject = new Tile(clickedTile);
+    if (!tileObject.isEmpty) {
+      this.ressources["wrong"].play();
+      return;
+    }
+
+    // do move
+    this.ressources[this.currentPlayer === "X" ? "click" : "clack"].play();
+    tileObject.text = this.currentPlayer;
+    console.log(this.asText);
+
+    if (this.logic.checkForWinner(this)) {
+      this.ressources["bell"].play();
+      this.dialog.showAlert(`Spieler ${this.currentPlayer} gewinnt!`, () => this.reset());
+    } else if (this.logic.checkForDraw(this)) {
+      this.ressources["draw"].play();
+      this.dialog.showAlert("Unentschieden!", () => this.reset());
     } else {
-      this.clack.play();
+      this.currentPlayer = this.currentPlayer === "X" ? "O" : "X";
     }
   }
 
-  allTiles() {
-    return Array.from(
-      document.querySelectorAll(".tile"),
-      (element) => new Tile(element)
-    );
+  toString() {
+    return `text: ${this.asText}`;
   }
 
-  asText() {
+  get asText() {
     let text = "";
     let count = 0;
-    for (const tile of this.allTiles()) {
+    for (const tile of this.allTiles) {
       count++;
       text += tile.text;
       text = count % 3 == 0 ? text + "\n" : text + " ";
     }
     return text;
   }
-  
-  checkForWinner() {
+
+  get allTiles() {
+    const elements = document.querySelectorAll(".tile");
+    //console.log(`Info: ${elements.length} tiles found.`)
+    return Array.from(elements, (e) => new Tile(e));
+  }
+}
+
+/**
+ * Implementation der Logik
+ */
+class Logic {
+  constructor() {}
+
+  checkForWinner(board) {
     // Die Logik für die Überprüfung eines Gewinners
     // Beispiel: Wenn Sie eine Zeile, Spalte oder Diagonale mit dem gleichen Spieler finden, gibt es einen Gewinner.
-    const rows = this.asText().split("\n");
-    const board = Array.from(rows, (row) => row.split(" "));
+    const rows = board.asText.split("\n");
+    const cells = Array.from(rows, (row) => row.split(" "));
 
     // Überprüfen von horizontalen Linien
     for (let row = 0; row < 3; row++) {
       if (
-        board[row][0] !== "." &&
-        board[row][0] === board[row][1] &&
-        board[row][1] === board[row][2]
+        cells[row][0] !== "." &&
+        cells[row][0] === cells[row][1] &&
+        cells[row][1] === cells[row][2]
       ) {
         return true; // Gewonnen
       }
@@ -113,9 +239,9 @@ class Game {
     // Überprüfen von vertikalen Linien
     for (let col = 0; col < 3; col++) {
       if (
-        board[0][col] !== "." &&
-        board[0][col] === board[1][col] &&
-        board[1][col] === board[2][col]
+        cells[0][col] !== "." &&
+        cells[0][col] === cells[1][col] &&
+        cells[1][col] === cells[2][col]
       ) {
         return true; // Gewonnen
       }
@@ -123,17 +249,17 @@ class Game {
 
     // Überprüfen der Diagonalen
     if (
-      board[0][0] !== "." &&
-      board[0][0] === board[1][1] &&
-      board[1][1] === board[2][2]
+      cells[0][0] !== "." &&
+      cells[0][0] === cells[1][1] &&
+      cells[1][1] === cells[2][2]
     ) {
       return true; // Gewonnen
     }
 
     if (
-      board[0][2] !== "." &&
-      board[0][2] === board[1][1] &&
-      board[1][1] === board[2][0]
+      cells[0][2] !== "." &&
+      cells[0][2] === cells[1][1] &&
+      cells[1][1] === cells[2][0]
     ) {
       return true; // Gewonnen
     }
@@ -141,9 +267,9 @@ class Game {
     return false; // Kein Gewinner
   }
 
-  checkForDraw() {
+  checkForDraw(board) {
     // Überprüfen, ob alle Kacheln belegt sind
-    for (const tile of this.allTiles()) {
+    for (const tile of board.allTiles) {
       if (tile.isEmpty) {
         // Es gibt mindestens eine leere Kachel, also kein Unentschieden
         return false;
@@ -152,67 +278,15 @@ class Game {
     // Alle Kacheln sind belegt, es ist ein Unentschieden
     return true;
   }
-
-  handleTileClick(event) {
-    const clickedTile = event.target;
-
-    if (clickedTile.classList.contains("tile")) {
-      const tileObject = new Tile(clickedTile);
-
-      if (tileObject.isEmpty) {
-        tileObject.text = this.currentPlayer;
-        this.playClickOrClack();
-        console.log(this.asText());
-
-        if (this.checkForWinner()) {
-          this.bell.play();
-          showAlert(`Spieler ${this.currentPlayer} gewinnt!`);
-        } else if (this.checkForDraw()) {
-          this.draw.play();
-          showAlert("Unentschieden!");
-        } else {
-          this.currentPlayer = this.currentPlayer === "X" ? "O" : "X";
-        }
-      } else {
-        this.wrong.play();
-      }
-    }
-  }
 }
 
-const game = new Game();
-
-let notificationTimeout;
-
-function showAlert(message) {
-  // Modal-Box mit Nachricht wird angezeigt
-  const notificationModal = document.getElementById("notificationModal");
-  const overlay = document.getElementById("overlay");
-  const messageElement = document.getElementById("notificationMessage");
-
-  // Setzen der Nachricht in die Modal-Box
-  messageElement.textContent = message;
-
-  // Anzeigen der Modal-Box
-  notificationModal.style.display = "block";
-  overlay.style.display = "block";
-
-  // Neues Timeout starten
-  notificationTimeout = setTimeout(function () {
-    hideNotification();
-  }, 5000);
-}
-
-function hideNotification() {
-  // Modal-Box wird ausgeblendet
-  const notificationModal = document.getElementById("notificationModal");
-  const overlay = document.getElementById("overlay");
-
-  notificationModal.style.display = "none";
-  overlay.style.display = "none";
-
-  game.reset();
-
-  // Timeout zurücksetzen
-  clearTimeout(notificationTimeout);
-}
+const ressources = {
+  click: new Audio("resources/click.mp3"),
+  clack: new Audio("resources/clack.mp3"),
+  wrong: new Audio("resources/buzz.mp3"),
+  bell: new Audio("resources/success.mp3"),
+  draw: new Audio("resources/draw.mp3"),
+};
+const dialog = new ModalDialog();
+const logic = new Logic();
+const board = new Board(ressources, dialog, logic);

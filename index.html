@@ -6,15 +6,14 @@
     <title>Tic-Tac-Toe</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <!-- Modal-Box für die Benachrichtigung -->
-    <div class="overlay" id="overlay"></div>
-    <div id="notificationModal" class="modal">
-        <p id="notificationMessage">Hier wird die Nachricht eingefügt.</p>
-        <button onclick="hideNotification()">OK</button>
-      </div>
+  <body id="root">
+    <div id="overlay" class="overlay"></div>
+    <div id="notification" class="modal">
+      <p id="message"></p>
+      <button id="confirm">OK</button>
+    </div>
 
-    <div class="game-container"></div>
+    <div id="board" class="game-container"></div>
 
     <script src="script.js"></script>
   </body>
