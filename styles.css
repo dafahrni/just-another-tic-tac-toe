@@ -1,0 +1,30 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+  cursor: default;
+}
+
+.game-container {
+  width: 100vmin; /* vmin stellt sicher, dass die kleinere der beiden Dimensionen genutzt wird */
+  height: 100vmin;
+  overflow: hidden; /* Verhindert das Scrollen */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vmin; /* Abstand zwischen den Kacheln nach Bedarf anpassen */
+}
+
+.tile {
+  width: 100%;
+  height: 100%;
+  background-color: #3498db; /* Blaue Hintergrundfarbe nach Bedarf anpassen */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
