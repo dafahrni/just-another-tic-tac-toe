@@ -34,6 +34,9 @@ class Tile {
 
 class Game {
   constructor() {
+    this.click = new Audio("resources/click.mp3");
+    this.clack = new Audio("resources/clack.mp3");
+
     this.setupGameBoard();
     this.setupEventListeners();
     this.reset();
@@ -59,6 +62,14 @@ class Game {
     this.allTiles().forEach((tile) => tile.reset());
     this.currentPlayer = "X";
     console.log(this.asText());
+  }
+
+  playClickOrClack() {
+    if (this.currentPlayer === "X") {
+      this.click.play();
+    } else {
+      this.clack.play();
+    }
   }
 
   allTiles() {
@@ -147,6 +158,7 @@ class Game {
 
       if (tileObject.isEmpty) {
         tileObject.text = this.currentPlayer;
+        this.playClickOrClack();
         console.log(this.asText());
 
         if (this.checkForWinner()) {
