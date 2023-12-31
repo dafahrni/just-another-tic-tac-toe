@@ -1,7 +1,4 @@
-/**
- * Modal-Box für die Benachrichtigung
- */
-class ModalDialog {
+class ModalDialogBase {
   constructor() {
     this.notification = null;
     this.overlay = null;
@@ -13,19 +10,6 @@ class ModalDialog {
 
     this.setupHtml();
     this.setupEventListeners();
-  }
-
-  showAlert(message, performAfterHiding) {
-    // Nachricht und Aktion werden gesetzt
-    this.text.textContent = message;
-    this.action = performAfterHiding;
-
-    // Anzeigen der Modal-Box
-    this.notification.style.display = "block";
-    this.overlay.style.display = "block";
-
-    // Neues Timeout starten
-    this.notificationTimeout = setTimeout(() => this.hideNotification(), 5000);
   }
 
   hideNotification() {
@@ -56,11 +40,35 @@ class ModalDialog {
     this.notification =
       notification ?? Helper.appendChild(root, "div", "notification", "modal");
     this.text = text ?? Helper.appendChild(this.notification, "p", "message");
-    this.button = button ?? Helper.appendChild(this.notification, "button", "confirm", null, "OK");
+    this.button =
+      button ??
+      Helper.appendChild(this.notification, "button", "confirm", null, "OK");
   }
 
   setupEventListeners() {
     this.button.addEventListener("click", this.hideNotification.bind(this));
+  }
+}
+
+/**
+ * Modal-Box für die Benachrichtigung
+ */
+export class ModalDialog extends ModalDialogBase {
+  constructor() {
+    super();
+  }
+
+  showAlert(message, performAfterHiding) {
+    // Nachricht und Aktion werden gesetzt
+    this.text.textContent = message;
+    this.action = performAfterHiding;
+
+    // Anzeigen der Modal-Box
+    this.notification.style.display = "block";
+    this.overlay.style.display = "block";
+
+    // Neues Timeout starten
+    this.notificationTimeout = setTimeout(() => this.hideNotification(), 5000);
   }
 }
 
@@ -122,10 +130,7 @@ class Tile {
   }
 }
 
-/**
- * Spielfeld mit Spielstand
- */
-class Board {
+class BoardBase {
   constructor(ressources, dialog, logic) {
     this.ressources = ressources;
     this.dialog = dialog;
@@ -182,7 +187,9 @@ class Board {
 
     if (this.logic.checkForWinner(this)) {
       this.ressources["bell"].play();
-      this.dialog.showAlert(`Spieler ${this.currentPlayer} gewinnt!`, () => this.reset());
+      this.dialog.showAlert(`Spieler ${this.currentPlayer} gewinnt!`, () =>
+        this.reset()
+      );
     } else if (this.logic.checkForDraw(this)) {
       this.ressources["draw"].play();
       this.dialog.showAlert("Unentschieden!", () => this.reset());
@@ -214,79 +221,10 @@ class Board {
 }
 
 /**
- * Implementation der Logik
+ * Spielfeld mit Spielstand
  */
-class Logic {
-  constructor() {}
-
-  checkForWinner(board) {
-    // Die Logik für die Überprüfung eines Gewinners
-    // Beispiel: Wenn Sie eine Zeile, Spalte oder Diagonale mit dem gleichen Spieler finden, gibt es einen Gewinner.
-    const rows = board.asText.split("\n");
-    const cells = Array.from(rows, (row) => row.split(" "));
-
-    // Überprüfen von horizontalen Linien
-    for (let row = 0; row < 3; row++) {
-      if (
-        cells[row][0] !== "." &&
-        cells[row][0] === cells[row][1] &&
-        cells[row][1] === cells[row][2]
-      ) {
-        return true; // Gewonnen
-      }
-    }
-
-    // Überprüfen von vertikalen Linien
-    for (let col = 0; col < 3; col++) {
-      if (
-        cells[0][col] !== "." &&
-        cells[0][col] === cells[1][col] &&
-        cells[1][col] === cells[2][col]
-      ) {
-        return true; // Gewonnen
-      }
-    }
-
-    // Überprüfen der Diagonalen
-    if (
-      cells[0][0] !== "." &&
-      cells[0][0] === cells[1][1] &&
-      cells[1][1] === cells[2][2]
-    ) {
-      return true; // Gewonnen
-    }
-
-    if (
-      cells[0][2] !== "." &&
-      cells[0][2] === cells[1][1] &&
-      cells[1][1] === cells[2][0]
-    ) {
-      return true; // Gewonnen
-    }
-
-    return false; // Kein Gewinner
-  }
-
-  checkForDraw(board) {
-    // Überprüfen, ob alle Kacheln belegt sind
-    for (const tile of board.allTiles) {
-      if (tile.isEmpty) {
-        // Es gibt mindestens eine leere Kachel, also kein Unentschieden
-        return false;
-      }
-    }
-    // Alle Kacheln sind belegt, es ist ein Unentschieden
-    return true;
+export class Board extends BoardBase {
+  constructor(ressources, dialog, logic) {
+    super(ressources, dialog, logic);
   }
 }
-
-const ressources = {
-  click: new Audio("resources/click.mp3"),
-  clack: new Audio("resources/clack.mp3"),
-  wrong: new Audio("resources/buzz.mp3"),
-  bell: new Audio("resources/success.mp3"),
-  draw: new Audio("resources/draw.mp3"),
-};
-const dialog = new ModalDialog();
-const logic = new Logic();
-const board = new Board(ressources, dialog, logic);
