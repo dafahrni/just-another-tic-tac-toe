@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Modal-Box für die Benachrichtigung -->
+    <div class="overlay" id="overlay"></div>
+    <div id="notificationModal" class="modal">
+        <p id="notificationMessage">Hier wird die Nachricht eingefügt.</p>
+        <button onclick="hideNotification()">OK</button>
+      </div>
+
     <div class="game-container"></div>
 
     <script src="script.js"></script>
