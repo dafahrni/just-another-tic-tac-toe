@@ -8,6 +8,7 @@ html {
   justify-content: center;
   background-color: black;
   cursor: default;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .game-container {
@@ -17,6 +18,7 @@ html {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2vmin; /* Abstand zwischen den Kacheln nach Bedarf anpassen */
+  font-size: 20vmin; /* Schriftgröße basierend auf der Größe des Spielfelds */
 }
 
 .tile {
