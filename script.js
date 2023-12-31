@@ -36,6 +36,9 @@ class Game {
   constructor() {
     this.click = new Audio("resources/click.mp3");
     this.clack = new Audio("resources/clack.mp3");
+    this.wrong = new Audio("resources/buzz.mp3");
+    this.bell = new Audio("resources/success.mp3");
+    this.draw = new Audio("resources/draw.mp3");
 
     this.setupGameBoard();
     this.setupEventListeners();
@@ -162,12 +165,16 @@ class Game {
         console.log(this.asText());
 
         if (this.checkForWinner()) {
+          this.bell.play();
           showAlert(`Spieler ${this.currentPlayer} gewinnt!`);
         } else if (this.checkForDraw()) {
+          this.draw.play();
           showAlert("Unentschieden!");
         } else {
           this.currentPlayer = this.currentPlayer === "X" ? "O" : "X";
         }
+      } else {
+        this.wrong.play();
       }
     }
   }
