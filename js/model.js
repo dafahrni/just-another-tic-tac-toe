@@ -47,6 +47,8 @@ export class Model {
     const rows = this._asText.split("\n");
     const board = Array.from(rows, (row) => row.split(" "));
 
+    return checkLines(board, 3);
+
     // Überprüfen von horizontalen Linien
     for (let row = 0; row < this.side; row++) {
       if (
@@ -113,7 +115,7 @@ export class Model {
       text += cell.value;
       text = count % this.side == 0 ? text + "\n" : text + " ";
     }
-    return text;
+    return text.slice(0, -1);
   }
 
   _isValid(index) {
@@ -161,4 +163,85 @@ class Cell {
   toString() {
     return `value: ${this.value}, isEmpty: ${this.isEmpty}`;
   }
+}
+
+function checkLines(grid, targetCount) {
+  const n = grid.length;
+
+  function transpose(arr) {
+    return arr[0].map((_, i) => arr.map((row) => row[i]));
+  }
+
+  // Funktion zur Überprüfung von Zeilen und Spalten
+  function checkRowCol(arr) {
+    for (let i = 0; i < n; i++) {
+      let count = 1;
+      for (let j = 1; j < n; j++) {
+        if (arr[i][j] !== "." && arr[i][j] === arr[i][j - 1]) {
+          count++;
+          if (count === targetCount) {
+            return true;
+          }
+        } else {
+          count = 1;
+        }
+      }
+    }
+    return false;
+  }
+
+  // Überprüfe horizontale und vertikale Linien
+  if (checkRowCol(grid) || checkRowCol(transpose(grid))) {
+    return true;
+  }
+
+  // Überprüfe diagonale Linien
+  for (let i = 0; i <= n - targetCount; i++) {
+    for (let j = 0; j <= n - targetCount; j++) {
+      // Überprüfe Hauptdiagonale
+      let countDiagonal1 = 1;
+      // Überprüfe Nebendiagonale
+      let countDiagonal2 = 1;
+
+      for (let k = 1; k < targetCount; k++) {
+        if (
+          grid[i + k][j + k] !== "." &&
+          grid[i + k][j + k] === grid[i + k - 1][j + k - 1]
+        ) {
+          countDiagonal1++;
+          if (countDiagonal1 === targetCount) {
+            return true;
+          }
+        }
+
+        if (
+          grid[i + k][j + targetCount - 1 - k] !== "." &&
+          grid[i + k][j + targetCount - 1 - k] ===
+            grid[i + k - 1][j + targetCount - k]
+        ) {
+          countDiagonal2++;
+          if (countDiagonal2 === targetCount) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+// Beispielaufruf
+const grid = [
+  [".", ".", "."],
+  [".", ".", "X"],
+  [".", ".", "X"],
+];
+
+const targetCount = 3;
+
+if (checkLines(grid, targetCount)) {
+  console.log(`Es gibt eine Linie von ${targetCount} gleichen Elementen.`);
+} else {
+  console.log(`Es gibt keine Linie von ${targetCount} gleichen Elementen.`);
 }

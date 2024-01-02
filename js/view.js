@@ -167,7 +167,8 @@ class Board {
     const index = this._indexOf(tile);
     const value = this._model.readCell(index);
     tile.textContent = value;
-    tile.style.color = value === "." ? "transparent" : "white";
+    tile.style.color =
+      value === "." ? "transparent" : value === "X" ? "red" : "blue";
   }
 
   _indexOf(tile) {
