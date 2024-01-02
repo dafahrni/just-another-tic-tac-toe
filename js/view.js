@@ -107,7 +107,7 @@ class ModalDialog {
 
 class Board {
   constructor(model) {
-    this._tiles = Array(9);
+    this._tiles = Array(model.size);
     this._selectedTile = null;
     this._notifySelectionChanged = null;
     this._model = model;
@@ -145,6 +145,8 @@ class Board {
         .appendTo(container)
         .getResult();
     }
+    const side = this._model.side;
+    container.style.gridTemplateColumns = `repeat(${side}, 1fr)`;
   }
 
   _tileSelected(event) {

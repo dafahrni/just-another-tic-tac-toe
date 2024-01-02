@@ -1,7 +1,17 @@
 export class Model {
-  constructor() {
+  constructor(side = 3) {
+    this._side = side;
+    this._size = side * side;
     this._player = "X";
-    this._cells = Array.from({ length: 9 }, () => new Cell());
+    this._cells = Array.from({ length: this.size }, () => new Cell());
+  }
+
+  get side() {
+    return this._side;
+  }
+
+  get size() {
+    return this._size;
   }
 
   nextPlayer() {
@@ -38,7 +48,7 @@ export class Model {
     const board = Array.from(rows, (row) => row.split(" "));
 
     // Überprüfen von horizontalen Linien
-    for (let row = 0; row < 3; row++) {
+    for (let row = 0; row < this.side; row++) {
       if (
         board[row][0] !== "." &&
         board[row][0] === board[row][1] &&
@@ -49,7 +59,7 @@ export class Model {
     }
 
     // Überprüfen von vertikalen Linien
-    for (let col = 0; col < 3; col++) {
+    for (let col = 0; col < this.side; col++) {
       if (
         board[0][col] !== "." &&
         board[0][col] === board[1][col] &&
@@ -101,14 +111,16 @@ export class Model {
     for (const cell of this._cells) {
       count++;
       text += cell.value;
-      text = count % 3 == 0 ? text + "\n" : text + " ";
+      text = count % this.side == 0 ? text + "\n" : text + " ";
     }
     return text;
   }
 
   _isValid(index) {
-    if (index < 0 || index >= this._cells.length) {
-      console.log(`Error: Index ${index} outside of intervall [0..8]`);
+    if (index < 0 || index >= this.size) {
+      console.log(
+        `Error: Index ${index} outside of intervall [0..${this.size - 1}]`
+      );
       return false;
     }
     return true;
