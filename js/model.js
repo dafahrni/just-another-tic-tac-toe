@@ -1,21 +1,48 @@
-/**
- * Implementation der Logik
- */
-export class Logic {
-  constructor() {}
+export class Model {
+  constructor() {
+    this._player = "X";
+    this._cells = Array.from({ length: 9 }, () => new Cell());
+  }
 
-  checkForWinner(board) {
+  nextPlayer() {
+    this._player = this._player === "X" ? "O" : "X";
+  }
+
+  get player() {
+    return this._player;
+  }
+
+  readCell(index) {
+    return this._isValid(index) ? this._cells[index].value : "!";
+  }
+
+  changeCell(index) {
+    if (this._isValid(index)) {
+      this._cells[index].value = this.player;
+      console.log(this._asText);
+      return true;
+    }
+    return false;
+  }
+
+  resetCells() {
+    this._cells.forEach((c) => c.reset());
+    this._player = "X";
+    console.log(this._asText);
+  }
+
+  checkForWinner() {
     // Die Logik für die Überprüfung eines Gewinners
-    // Beispiel: Wenn Sie eine Zeile, Spalte oder Diagonale mit dem gleichen Spieler finden, gibt es einen Gewinner.
-    const rows = board.asText.split("\n");
-    const cells = Array.from(rows, (row) => row.split(" "));
+    // Beispiel: bei einer Zeile, Spalte oder Diagonale mit dem gleichen Spieler gibt es einen Gewinner.
+    const rows = this._asText.split("\n");
+    const board = Array.from(rows, (row) => row.split(" "));
 
     // Überprüfen von horizontalen Linien
     for (let row = 0; row < 3; row++) {
       if (
-        cells[row][0] !== "." &&
-        cells[row][0] === cells[row][1] &&
-        cells[row][1] === cells[row][2]
+        board[row][0] !== "." &&
+        board[row][0] === board[row][1] &&
+        board[row][1] === board[row][2]
       ) {
         return true; // Gewonnen
       }
@@ -24,9 +51,9 @@ export class Logic {
     // Überprüfen von vertikalen Linien
     for (let col = 0; col < 3; col++) {
       if (
-        cells[0][col] !== "." &&
-        cells[0][col] === cells[1][col] &&
-        cells[1][col] === cells[2][col]
+        board[0][col] !== "." &&
+        board[0][col] === board[1][col] &&
+        board[1][col] === board[2][col]
       ) {
         return true; // Gewonnen
       }
@@ -34,17 +61,17 @@ export class Logic {
 
     // Überprüfen der Diagonalen
     if (
-      cells[0][0] !== "." &&
-      cells[0][0] === cells[1][1] &&
-      cells[1][1] === cells[2][2]
+      board[0][0] !== "." &&
+      board[0][0] === board[1][1] &&
+      board[1][1] === board[2][2]
     ) {
       return true; // Gewonnen
     }
 
     if (
-      cells[0][2] !== "." &&
-      cells[0][2] === cells[1][1] &&
-      cells[1][1] === cells[2][0]
+      board[0][2] !== "." &&
+      board[0][2] === board[1][1] &&
+      board[1][1] === board[2][0]
     ) {
       return true; // Gewonnen
     }
@@ -52,15 +79,74 @@ export class Logic {
     return false; // Kein Gewinner
   }
 
-  checkForDraw(board) {
+  checkForDraw() {
     // Überprüfen, ob alle Kacheln belegt sind
-    for (const tile of board.allTiles) {
-      if (tile.isEmpty) {
+    for (const cell of this._cells) {
+      if (cell.isEmpty) {
         // Es gibt mindestens eine leere Kachel, also kein Unentschieden
         return false;
       }
     }
     // Alle Kacheln sind belegt, es ist ein Unentschieden
     return true;
+  }
+
+  toString() {
+    return `text: ${this._asText}`;
+  }
+
+  get _asText() {
+    let text = "";
+    let count = 0;
+    for (const cell of this._cells) {
+      count++;
+      text += cell.value;
+      text = count % 3 == 0 ? text + "\n" : text + " ";
+    }
+    return text;
+  }
+
+  _isValid(index) {
+    if (index < 0 || index >= this._cells.length) {
+      console.log(`Error: Index ${index} outside of intervall [0..8]`);
+      return false;
+    }
+    return true;
+  }
+}
+
+class Cell {
+  constructor(player = null) {
+    this._value = this.isValid(player) ? player : ".";
+  }
+
+  get isEmpty() {
+    return this.value === ".";
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(player) {
+    if (!this.isEmpty) {
+      return;
+    }
+    if (!this.isValid(player)) {
+      return;
+    }
+    this._value = player;
+  }
+
+  reset() {
+    this._value = ".";
+  }
+
+  isValid(player) {
+    return player === "X" || player === "O";
+  }
+
+  toString() {
+    return `value: ${this.value}, isEmpty: ${this.isEmpty}`;
   }
 }
