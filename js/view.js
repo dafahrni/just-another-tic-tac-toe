@@ -28,6 +28,16 @@ class ElementBuilder {
     return this;
   }
 
+  setContent(element) {
+    const firstChild = this._child.firstChild;
+    if (firstChild) {
+      this._child.replaceChild(firstChild, element);
+    } else {
+      this._child.appendChild(element);
+    }
+    return this;
+  }
+
   getResult() {
     return this._child;
   }
@@ -105,6 +115,93 @@ class ModalDialog {
   }
 }
 
+class SvgGenerator {
+  constructor() {
+    this._svgNamespace = "http://www.w3.org/2000/svg";
+  }
+
+  generateDefault(color = "black") {
+    const svg = this._createSvg();
+
+    const rectAttributes = {
+      width: "10", height: "10",
+      fill: color
+    };
+
+    const rect = this._createPart(rectAttributes, "rect");
+    svg.appendChild(rect);
+
+    return svg;
+  }
+
+  generateO(color) {
+    const svg = this._createSvg();
+
+    const circleAttributes = {
+      cx: "50", cy: "50", r: "37",
+      stroke: color,
+      "stroke-width": "20",
+      fill: "transparent"
+    };
+
+    const circle = this._createPart(circleAttributes, "circle");
+    svg.appendChild(circle);
+
+    return svg;
+  }
+
+  generateX(color) {
+    const svg = this._createSvg();
+
+    // Gemeinsame Vorlage für die Linienattribute
+    const lineAttributesTemplate = {
+      x1: "10", y1: "10",
+      x2: "90", y2: "90",
+      stroke: color,
+      "stroke-width": "20",
+    };
+
+    // Erstellen der Linien mit der gemeinsamen Vorlage
+    const line1 = this._createPart(lineAttributesTemplate, "line");
+    const line2 = this._createPart(lineAttributesTemplate, "line");
+
+    // Anpassen von spezifischen Attributen für line2
+    this._setAttributes(line2, {
+      x1: "90", y1: "10",
+      x2: "10", y2: "90",
+    });
+
+    // Hinzufügen zum SVG-Element
+    svg.appendChild(line1);
+    svg.appendChild(line2);
+
+    return svg;
+  }
+
+  _createSvg() {
+    const svg = document.createElementNS(this._svgNamespace, "svg");
+    this._setAttributes(svg, {
+      xmlns: this._svgNamespace,
+      viewBox: "0 0 100 100",
+    });
+    return svg;
+  }
+
+  _createPart(attributes, form) {
+    const part = document.createElementNS(this._svgNamespace, form);
+    this._setAttributes(part, attributes);
+    return part;
+  }
+
+  _setAttributes(element, attributes) {
+    for (const key in attributes) {
+      if (attributes.hasOwnProperty(key)) {
+        element.setAttribute(key, attributes[key]);
+      }
+    }
+  }
+}
+
 class Board {
   constructor(model) {
     this._tiles = Array(model.size);
@@ -141,7 +238,7 @@ class Board {
     for (let i = 0; i < this._tiles.length; i++) {
       this._tiles[i] = new ElementBuilder("div")
         .setClass("tile")
-        .setText("")
+        .setContent(this._generateSvg())
         .appendTo(container)
         .getResult();
     }
@@ -150,8 +247,8 @@ class Board {
   }
 
   _tileSelected(event) {
-    const selectedTile = event.target;
-    if (!selectedTile.classList.contains("tile")) {
+    const selectedTile = event.target.closest(".tile");
+    if (!selectedTile) {
       return;
     }
 
@@ -166,13 +263,25 @@ class Board {
   _update(tile) {
     const index = this._indexOf(tile);
     const value = this._model.readCell(index);
-    tile.textContent = value;
-    tile.style.color =
-      value === "." ? "transparent" : value === "X" ? "red" : "blue";
+    const svg = this._generateSvg(value);
+    tile.replaceChild(svg, tile.firstChild);
   }
 
   _indexOf(tile) {
     return this._tiles.indexOf(tile);
+  }
+
+  _generateSvg(value = ".") {
+    const generator = new SvgGenerator();
+    const color = value === "X" ? "red" : "blue";
+    switch (value) {
+      case "X":
+        return generator.generateX(color);
+      case "O":
+        return generator.generateO(color);
+      default:
+        return generator.generateDefault();
+    }
   }
 }
 
