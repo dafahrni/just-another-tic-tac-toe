@@ -43,6 +43,139 @@ class ElementBuilder {
   }
 }
 
+class FullScreen {
+  constructor() {
+    this._button = document.getElementById("fullscreen-button");
+    this._button.addEventListener("click", () => this._handleButtonClick());
+    this._button.textContent = "FULL SCR";
+    this._isActivated = false;
+  }
+
+  get isActivated() {
+    return this._isActivated;
+  }
+
+  get isSupported() {
+    const element = document.documentElement;
+    return (
+      element.requestFullscreen ||
+      element.mozRequestFullScreen || // Firefox
+      element.webkitRequestFullscreen || // Chrome, Safari und Opera
+      element.msRequestFullscreen // Internet Explorer
+    );
+  }
+
+  showButton() {
+    this._button.hidden = false;
+  }
+
+  hideButton() {
+    this._button.hidden = true;
+  }
+
+  _handleButtonClick() {
+    if (this._isActivated) {
+      this._deactivate();
+    } else {
+      this._activate();
+    }
+  }
+
+  _activate() {
+    // Funktion, um den Vollbildmodus zu aktivieren
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullscreen) {
+      element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) {
+      element.msRequestFullscreen();
+    }
+    this._button.textContent = "NORMAL";
+    this._isActivated = true;
+  }
+
+  _deactivate() {
+    // Funktion, um den Vollbildmodus zu deaktivieren
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+    this._button.textContent = "FULL SCR";
+    this._isActivated = false;
+  }
+}
+
+class ScreenLock {
+  constructor() {
+    this._button = document.getElementById("screen-lock-button");
+    this._button.addEventListener("click", () => this._handleButtonClick());
+    this._isActivated = false;
+    this._updateText();
+    window.addEventListener('orientationchange', () => this._updateText());
+  }
+
+  get isActivated() {
+    return this._isActivated;
+  }
+
+  get isSupported() {
+    return this._screenOrientation !== null;
+  }
+
+  showButton() {
+    this._button.hidden = false;
+  }
+
+  hideButton() {
+    this._button.hidden = true;
+  }
+
+  _handleButtonClick() {
+    if (this.isActivated) {
+      this._deactivate();
+    } else {
+      this._activate();
+    }
+    this._updateText();
+  }
+
+  _activate() {
+    if (this._screenOrientation && this._screenOrientation.lock) {
+      this._screenOrientation.lock(this._screenOrientation?.type);
+    }
+    this._isActivated = true;
+  }
+
+  _deactivate() {
+    if (this._screenOrientation && this._screenOrientation.unlock) {
+      this._screenOrientation.unlock();
+    }
+    this._isActivated = false;
+  }
+
+  _updateText() {
+    if (this.isActivated) {
+      this._button.textContent = "UNLOCK";
+    } else {
+      this._button.textContent = `LOCK ${
+        this._screenOrientation?.type.split("-")[0]
+      }`;
+    }
+  }
+
+  get _screenOrientation() {
+    return screen.orientation || screen.mozOrientation || screen.msOrientation;
+  }
+}
+
 class ModalDialog {
   constructor() {
     this._notification = null;
@@ -79,7 +212,7 @@ class ModalDialog {
     if (this._action) {
       this._action();
     } else {
-      console.log("Warning: As action is undefined, nothing is performed.");
+      console.warn("As action is undefined, nothing is performed.");
     }
 
     // Timeout zurücksetzen
@@ -106,10 +239,15 @@ class ModalDialog {
       .appendTo(this._notification)
       .getResult();
 
+    const bc = new ElementBuilder("div")
+      .setClass("button-container")
+      .appendTo(this._notification)
+      .getResult();
+
     this._button = new ElementBuilder("button")
       .setId("confirm")
       .setText("OK")
-      .appendTo(this._notification)
+      .appendTo(bc)
       .addListener("click", this._hideNotification.bind(this))
       .getResult();
   }
@@ -294,6 +432,8 @@ export class View {
     this._board = new Board(model);
     this._board.updateAll();
     this._dialog = new ModalDialog();
+    this._fullScreen = new FullScreen();
+    this._screenLock = new ScreenLock();
     this._ressources = {
       click: new Audio("resources/click.mp3"),
       clack: new Audio("resources/clack.mp3"),
@@ -303,7 +443,18 @@ export class View {
     };
   }
 
-  mainloop() {}
+  main() {
+    if (this._fullScreen.isSupported) {
+      if (this._fullScreen.isActivated) {
+        if (this._screenLock.isSupported) {
+          this._screenLock.showButton();
+        } 
+      } else {
+        this._fullScreen.showButton();
+        this._screenLock.hideButton();
+      }
+    }
+  }
 
   bindSelectionChanged(handler) {
     this._board.bindSelectionChanged(handler);

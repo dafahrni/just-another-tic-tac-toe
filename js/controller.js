@@ -23,6 +23,7 @@ export class Controller {
   }
 
   run() {
-    this.view.mainloop();
+    // main wird regelmässig aufgerufen
+    setInterval(() => this.view.main(), 100);
   }
 }
