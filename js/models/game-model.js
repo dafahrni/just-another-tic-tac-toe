@@ -1,4 +1,4 @@
-export class Model {
+export class GameModel {
   constructor(side = 3) {
     this._side = side;
     this._size = side * side;
