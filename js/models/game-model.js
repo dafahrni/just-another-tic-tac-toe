@@ -52,47 +52,6 @@ export class GameModel {
     const board = Array.from(rows, (row) => row.split(" "));
 
     return checkLines(board, 3);
-
-    // Überprüfen von horizontalen Linien
-    for (let row = 0; row < this.side; row++) {
-      if (
-        board[row][0] !== "." &&
-        board[row][0] === board[row][1] &&
-        board[row][1] === board[row][2]
-      ) {
-        return true; // Gewonnen
-      }
-    }
-
-    // Überprüfen von vertikalen Linien
-    for (let col = 0; col < this.side; col++) {
-      if (
-        board[0][col] !== "." &&
-        board[0][col] === board[1][col] &&
-        board[1][col] === board[2][col]
-      ) {
-        return true; // Gewonnen
-      }
-    }
-
-    // Überprüfen der Diagonalen
-    if (
-      board[0][0] !== "." &&
-      board[0][0] === board[1][1] &&
-      board[1][1] === board[2][2]
-    ) {
-      return true; // Gewonnen
-    }
-
-    if (
-      board[0][2] !== "." &&
-      board[0][2] === board[1][1] &&
-      board[1][1] === board[2][0]
-    ) {
-      return true; // Gewonnen
-    }
-
-    return false; // Kein Gewinner
   }
 
   checkForDraw() {
