@@ -5,6 +5,11 @@ export class GameController {
     this.view.bindSelectionChanged((i) => this.nextMove(i));
   }
 
+  firstMove(index) {
+    this.view.selectTile(index);
+    this.nextMove(index);
+  }
+
   nextMove(index) {
     if (this.model.changeCell(index)) {
       this.view.updateBoard();

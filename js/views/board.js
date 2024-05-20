@@ -14,6 +14,12 @@ export class Board {
       this._notifySelectionChanged = handler;
     }
   
+    selectTile(index) {
+      if (index >= 0 && index < this._tiles.length) {
+        this._selectedTile = this._tiles[index];
+      }
+    }
+
     updateSelectedTile() {
       if (this._selectedTile) {
         this._update(this._selectedTile);

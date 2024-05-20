@@ -37,6 +37,10 @@ export class GameView {
     this._board.bindSelectionChanged(handler);
   }
 
+  selectTile(index) {
+    this._board.selectTile(index);
+  }
+
   wrongMove() {
     this._playSound("wrong");
   }
